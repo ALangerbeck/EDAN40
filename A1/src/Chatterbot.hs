@@ -129,7 +129,7 @@ match wc (p:ps) (s:ss)
 singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
 singleWildcardMatch (wc:ps) (x:xs)
   |(match wc ps xs) /= Nothing =  Just [x]
-  |otherwise = Nothing 
+  |otherwise = Nothing
 longerWildcardMatch (wc:ps) (x:xs) = mmap (x:) (match wc (wc:ps) xs)
 
   
@@ -157,7 +157,9 @@ matchCheck = matchTest == Just testSubstitutions
 
 -- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
-transformationApply _ _ _ _ = Nothing
+--transformationApply wc func list (frstPatter,scndPattern) 
+--transformationApply _ _ _ _ = Nothing
+transformationApply wc id cmpList (fstPattern, sndPattern) = mmap (substitute wc sndPattern) (match wc fstPattern cmpList)
 {- TO BE WRITTEN -}
 
 
