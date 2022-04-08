@@ -2,6 +2,7 @@ module Chatterbot where
 import Utilities
 import System.Random
 import Data.Char
+import qualified Data.Maybe
 
 chatterbot :: String -> [(String, [String])] -> IO ()
 chatterbot botName botRules = do
@@ -35,7 +36,10 @@ rulesApply _ = id
 
 reflect :: Phrase -> Phrase
 {- TO BE WRITTEN -}
-reflect = id
+reflect [] = []
+reflect (frstWord:wordTail)
+  |lookup frstWord reflections /= Nothing = Data.Maybe.fromJust(lookup frstWord reflections): reflect wordTail
+  |otherwise = frstWord:reflect wordTail
 
 reflections =
   [ ("am",     "are"),
@@ -66,7 +70,7 @@ present :: Phrase -> String
 present = unwords
 
 prepare :: String -> Phrase
-prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|") 
+prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|")
 
 rulesCompile :: [(String, [String])] -> BotBrain
 {- TO BE WRITTEN -}
@@ -107,8 +111,8 @@ reductionsApply _ = id
 substitute :: Eq a => a -> [a] -> [a] -> [a]
 substitute wc [] s = []
 substitute wc (t:ts) s
-  | wc == t = s ++ (substitute wc ts s)
-  | otherwise = [t] ++ (substitute wc ts s)
+  | wc == t = s ++ substitute wc ts s
+  | otherwise = t : substitute wc ts s
 {- MAYBE NOT TO BE WRITTEN -}
 
 
@@ -118,9 +122,9 @@ match :: Eq a => a -> [a] -> [a] -> Maybe [a]
 match _ [] [] = Just []
 match _ [] _ = Nothing
 match _ _ [] = Nothing
-match wc (p:ps) (s:ss) 
+match wc (p:ps) (s:ss)
   | p == s = match wc ps ss
-  | p == wc = orElse (longerWildcardMatch (p:ps) (s:ss)) (singleWildcardMatch (p:ps) (s:ss)) 
+  | p == wc = orElse (longerWildcardMatch (p:ps) (s:ss)) (singleWildcardMatch (p:ps) (s:ss))
   | otherwise = Nothing
 {- TO BE WRITTEN -}
 
@@ -132,7 +136,7 @@ singleWildcardMatch (wc:ps) (x:xs)
   |otherwise = Nothing
 longerWildcardMatch (wc:ps) (x:xs) = mmap (x:) (match wc (wc:ps) xs)
 
-  
+
 
 
 
@@ -157,15 +161,17 @@ matchCheck = matchTest == Just testSubstitutions
 
 -- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
---transformationApply wc func list (frstPatter,scndPattern) 
+--transformationApply wc func list (frstPattern,scndPattern) 
 --transformationApply _ _ _ _ = Nothing
-transformationApply wc id cmpList (fstPattern, sndPattern) = mmap (substitute wc sndPattern) (match wc fstPattern cmpList)
+--transformationApply wc id cmpList (fstPattern, sndPattern) = mmap (substitute wc sndPattern) (match wc fstPattern cmpList)
+transformationApply wc f trList (fstPattern, sndPattern)
+  | Data.Maybe.isJust (match wc fstPattern trList) = Just (substitute wc sndPattern (f (Data.Maybe.fromJust (match wc fstPattern trList))))
+  | otherwise = Nothing
 {- TO BE WRITTEN -}
 
 
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
+transformationsApply wc f (pattern:patternTail) trList = orElse (transformationApply wc f trList pattern) (transformationsApply wc f patternTail trList)
 transformationsApply _ _ _ _ = Nothing
 {- TO BE WRITTEN -}
-
-
