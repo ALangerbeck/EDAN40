@@ -33,8 +33,7 @@ stateOfMind _ = return id
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
 rulesApply _ [] = []
-rulesApply patterns phrase = reflect (Data.Maybe.fromJust (transformationsApply "*" id patterns phrase))
-
+rulesApply patterns phrase =  Data.Maybe.fromJust (transformationsApply "*" reflect patterns phrase)
 
 reflect :: Phrase -> Phrase
 {- TO BE WRITTEN -}
