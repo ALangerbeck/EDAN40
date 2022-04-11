@@ -32,7 +32,9 @@ stateOfMind _ = return id
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
-rulesApply _ = id
+rulesApply _ [] = []
+rulesApply patterns phrase = reflect (Data.Maybe.fromJust (transformationsApply "*" id patterns phrase))
+
 
 reflect :: Phrase -> Phrase
 {- TO BE WRITTEN -}
@@ -161,9 +163,6 @@ matchCheck = matchTest == Just testSubstitutions
 
 -- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
---transformationApply wc func list (frstPattern,scndPattern) 
---transformationApply _ _ _ _ = Nothing
---transformationApply wc id cmpList (fstPattern, sndPattern) = mmap (substitute wc sndPattern) (match wc fstPattern cmpList)
 transformationApply wc f trList (fstPattern, sndPattern)
   | Data.Maybe.isJust (match wc fstPattern trList) = Just (substitute wc sndPattern (f (Data.Maybe.fromJust (match wc fstPattern trList))))
   | otherwise = Nothing
