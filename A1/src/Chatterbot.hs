@@ -3,6 +3,7 @@ import Utilities
 import System.Random
 import Data.Char
 import qualified Data.Maybe
+import System.Random
 
 chatterbot :: String -> [(String, [String])] -> IO ()
 chatterbot botName botRules = do
@@ -22,25 +23,30 @@ chatterbot botName botRules = do
 type Phrase = [String]
 type PhrasePair = (Phrase, Phrase)
 type BotBrain = [(Phrase, [Phrase])]
+-- [string,[string]]
 
 
 --------------------------------------------------------
 
 stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
 {- TO BE WRITTEN -}
-stateOfMind _ = return id
+stateOfMind botbrain = do
+  r <- randomIO :: IO Float
+  return  $ rulesApply $ (map . map2)  (id, pick r) botbrain
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
-rulesApply _ [] = []
-rulesApply patterns phrase =  Data.Maybe.fromJust (transformationsApply "*" reflect patterns phrase)
+--rulesApply patterns phrase =  Data.Maybe.fromJust(orElse (transformationsApply "*" reflect patterns phrase)  Data.Maybe.listToMaybe(words ""))
+rulesApply patterns phrase
+  | Data.Maybe.isNothing (transformationsApply "*" reflect patterns phrase) = []
+  | otherwise = Data.Maybe.fromJust (transformationsApply "*" reflect patterns phrase)
 
 reflect :: Phrase -> Phrase
 {- TO BE WRITTEN -}
 reflect [] = []
 reflect (frstWord:wordTail)
-  |lookup frstWord reflections /= Nothing = Data.Maybe.fromJust(lookup frstWord reflections): reflect wordTail
-  |otherwise = frstWord:reflect wordTail
+  | lookup frstWord reflections /= Nothing = Data.Maybe.fromJust(lookup frstWord reflections): reflect wordTail
+  | otherwise = frstWord:reflect wordTail
 
 reflections =
   [ ("am",     "are"),
@@ -73,9 +79,13 @@ present = unwords
 prepare :: String -> Phrase
 prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|")
 
+--BotBrain = [(Phrase, [Phrase])]
+-- [string,[string]]
+--  f(x,y) f(x, <- y
 rulesCompile :: [(String, [String])] -> BotBrain
 {- TO BE WRITTEN -}
-rulesCompile _ = []
+rulesCompile input  = map (map2 (prepare,(map prepare))) input 
+
 
 
 --------------------------------------
@@ -162,9 +172,9 @@ matchCheck = matchTest == Just testSubstitutions
 
 -- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
-transformationApply wc f trList (fstPattern, sndPattern)
-  | Data.Maybe.isJust (match wc fstPattern trList) = Just (substitute wc sndPattern (f (Data.Maybe.fromJust (match wc fstPattern trList))))
-  | otherwise = Nothing
+transformationApply wc f trList (fstPattern, sndPattern)  = mmap (substitute wc sndPattern . f) (match wc fstPattern trList)
+  -- | Data.Maybe.isJust (match wc fstPattern trList) = Just (substitute wc sndPattern (f (Data.Maybe.fromJust (match wc fstPattern trList))))
+  -- | otherwise = Nothing
 {- TO BE WRITTEN -}
 
 
