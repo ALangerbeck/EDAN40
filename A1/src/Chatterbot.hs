@@ -23,26 +23,20 @@ chatterbot botName botRules = do
 type Phrase = [String]
 type PhrasePair = (Phrase, Phrase)
 type BotBrain = [(Phrase, [Phrase])]
--- [string,[string]]
-
 
 --------------------------------------------------------
 
 stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
-{- TO BE WRITTEN -}
 stateOfMind botbrain = do
   r <- randomIO :: IO Float
-  return  $ rulesApply $ (map . map2)  (id, pick r) botbrain
+  return  $ rulesApply $ (map . map2) (id, pick r) botbrain
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
-{- TO BE WRITTEN -}
---rulesApply patterns phrase =  Data.Maybe.fromJust(orElse (transformationsApply "*" reflect patterns phrase)  Data.Maybe.listToMaybe(words ""))
 rulesApply patterns phrase
   | Data.Maybe.isNothing (transformationsApply "*" reflect patterns phrase) = []
   | otherwise = Data.Maybe.fromJust (transformationsApply "*" reflect patterns phrase)
 
 reflect :: Phrase -> Phrase
-{- TO BE WRITTEN -}
 reflect [] = []
 reflect (frstWord:wordTail)
   | lookup frstWord reflections /= Nothing = Data.Maybe.fromJust(lookup frstWord reflections): reflect wordTail
@@ -79,12 +73,8 @@ present = unwords
 prepare :: String -> Phrase
 prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|")
 
---BotBrain = [(Phrase, [Phrase])]
--- [string,[string]]
---  f(x,y) f(x, <- y
 rulesCompile :: [(String, [String])] -> BotBrain
-{- TO BE WRITTEN -}
-rulesCompile input  = map (map2 (prepare,(map prepare))) input 
+rulesCompile input  = map (map2 (words . map toLower,(map words))) input 
 
 
 
@@ -110,8 +100,11 @@ reduce :: Phrase -> Phrase
 reduce = reductionsApply reductions
 
 reductionsApply :: [PhrasePair] -> Phrase -> Phrase
-{- TO BE WRITTEN -}
-reductionsApply _ = id
+reductionsApply [] phrase = phrase 
+reductionsApply (r:rs) phrase
+  | match "*" (fst r) phrase /= Nothing = (substitute "*" (snd r))  (Data.Maybe.fromJust (match "*" (fst r) phrase))
+  | otherwise = reductionsApply rs phrase
+
 
 
 -------------------------------------------------------
@@ -124,7 +117,6 @@ substitute wc [] s = []
 substitute wc (t:ts) s
   | wc == t = s ++ substitute wc ts s
   | otherwise = t : substitute wc ts s
-{- MAYBE NOT TO BE WRITTEN -}
 
 
 -- Tries to match two lists. If they match, the result consists of the sublist
@@ -137,7 +129,6 @@ match wc (p:ps) (s:ss)
   | p == s = match wc ps ss
   | p == wc = orElse (longerWildcardMatch (p:ps) (s:ss)) (singleWildcardMatch (p:ps) (s:ss))
   | otherwise = Nothing
-{- TO BE WRITTEN -}
 
 
 -- Helper function to match
@@ -146,10 +137,6 @@ singleWildcardMatch (wc:ps) (x:xs)
   |(match wc ps xs) /= Nothing =  Just [x]
   |otherwise = Nothing
 longerWildcardMatch (wc:ps) (x:xs) = mmap (x:) (match wc (wc:ps) xs)
-
-
-
-
 
 
 -- Test cases --------------------
@@ -173,13 +160,9 @@ matchCheck = matchTest == Just testSubstitutions
 -- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
 transformationApply wc f trList (fstPattern, sndPattern)  = mmap (substitute wc sndPattern . f) (match wc fstPattern trList)
-  -- | Data.Maybe.isJust (match wc fstPattern trList) = Just (substitute wc sndPattern (f (Data.Maybe.fromJust (match wc fstPattern trList))))
-  -- | otherwise = Nothing
-{- TO BE WRITTEN -}
 
 
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
 transformationsApply wc f (pattern:patternTail) trList = orElse (transformationApply wc f trList pattern) (transformationsApply wc f patternTail trList)
 transformationsApply _ _ _ _ = Nothing
-{- TO BE WRITTEN -}
