@@ -76,8 +76,6 @@ prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|")
 rulesCompile :: [(String, [String])] -> BotBrain
 rulesCompile input  = map (map2 (words . map toLower,(map words))) input 
 
-
-
 --------------------------------------
 
 
@@ -96,8 +94,9 @@ reductions = (map.map2) (words, words)
     ( "hi *", "hello *")
   ]
 
+-- first was only applied once but fixed by adding fix function, hope thats okay
 reduce :: Phrase -> Phrase
-reduce = reductionsApply reductions
+reduce = fix $ reductionsApply reductions
 
 reductionsApply :: [PhrasePair] -> Phrase -> Phrase
 reductionsApply [] phrase = phrase 
@@ -151,8 +150,6 @@ substituteCheck = substituteTest == testString
 matchTest = match '*' testPattern testString
 matchCheck = matchTest == Just testSubstitutions
 
-
-
 -------------------------------------------------------
 -- Applying patterns
 --------------------------------------------------------
@@ -160,7 +157,6 @@ matchCheck = matchTest == Just testSubstitutions
 -- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
 transformationApply wc f trList (fstPattern, sndPattern)  = mmap (substitute wc sndPattern . f) (match wc fstPattern trList)
-
 
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
