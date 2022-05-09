@@ -2,19 +2,26 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 import GHC.Base (maxInt)
 import Data.Text.Array (equal)
+--import System.Win32 (COORD(x))
 
 {- Answers to Questions
 
 
 -}
 
-
 scoreMatch :: Int
-scoreMatch = 1
+scoreMatch = 0
 scoreMismatch :: Int
 scoreMismatch = -1
 scoreSpace :: Int
-scoreSpace = -2
+scoreSpace = -1
+
+string1 :: String
+string1 = "writers"
+string2 :: String
+string2 = "vintner"
+
+type AlignmentType = (String,String)
 
 
 -- 2a
@@ -39,18 +46,15 @@ attachHeads h1 h2 aList = [(h1:xs,h2:ys) | (xs,ys) <- aList]
 --2b
 maximaBy :: Ord b => (a -> b) -> [a] -> [a]
 maximaBy valueFcn xs = do
-    --let values = [valueFcn x | x <- xs]
-    --let maxValue = maximum values
-    --filter ((==) maxValue valueFcn) xs
+    let maxValue = maximum [valueFcn x | x <- xs]
+    filter (flip ((==) . valueFcn) maxValue) xs
 
-maximaBy _ [] = []
-maximaBy valueFcn xs
- | valueFcn (head xs) >= maximum (map valueFcn xs) = [head xs] ++ maximaBy valueFcn (tail xs)
- | otherwise = maximaBy valueFcn (tail xs)
-
--- maxValues <- filter maximum values-- maxIndexes <- elemIndex (maximum values) values
+optAlignments :: String -> String -> [AlignmentType]
+optAlignments [] [] = [([],[])]
+optAlignments [] (y:ys) = attachHeads '-' y (optAlignments [] ys)
+optAlignments (x:xs) [] = attachHeads x '-' (optAlignments xs [])
+optAlignments (x:xs) (y:ys) = maximaBy applySimilarityScore (attachHeads x y (optAlignments xs ys) ++ attachHeads '-' y (optAlignments (x:xs) ys) ++ attachHeads x '-' (optAlignments xs (y:ys)))
 
 -- Help functions
-maximum' :: Ord a => [a] -> a
-maximum' [x]       = x
-maximum' (x:x':xs) = maximum' ((if x >= x' then x else x'):xs)
+applySimilarityScore :: (String,String) -> Int
+applySimilarityScore (string1,string2) = similarityScore string1 string2
