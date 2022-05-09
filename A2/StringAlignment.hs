@@ -37,11 +37,16 @@ attachHeads :: a -> a -> [([a],[a])] -> [([a],[a])]
 attachHeads h1 h2 aList = [(h1:xs,h2:ys) | (xs,ys) <- aList]
 
 --2b
-maximaBy :: Ord b => (a -> b) -> [a] -> a
+maximaBy :: Ord b => (a -> b) -> [a] -> [a]
 maximaBy valueFcn xs = do
-    let values = [valueFcn x | x <- xs]
-    let maxValue = maximum values
-    filter ((==) maxValue valueFcn) xs
+    --let values = [valueFcn x | x <- xs]
+    --let maxValue = maximum values
+    --filter ((==) maxValue valueFcn) xs
+
+maximaBy _ [] = []
+maximaBy valueFcn xs
+ | valueFcn (head xs) >= maximum (map valueFcn xs) = [head xs] ++ maximaBy valueFcn (tail xs)
+ | otherwise = maximaBy valueFcn (tail xs)
 
 -- maxValues <- filter maximum values-- maxIndexes <- elemIndex (maximum values) values
 
