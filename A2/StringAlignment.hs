@@ -1,7 +1,12 @@
 -- Hlint options
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-import GHC.Base (maxInt)
+-- Hlint options
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
+import GHC.Base (maxInt, join)
 import Data.Text.Array (equal)
+import Data.List (intersperse)
+import Distribution.Simple.Setup (ConfigFlags(configConfigureArgs))
+import Control.Concurrent.STM (lengthTBQueue)
 --import System.Win32 (COORD(x))
 
 {- Answers to Questions
@@ -16,10 +21,13 @@ scoreMismatch = -1
 scoreSpace :: Int
 scoreSpace = -1
 
-string1 :: String
+string1,string2,string3,string4,string5,string6 :: String
 string1 = "writers"
-string2 :: String
 string2 = "vintner"
+string3 = "aferociousmonadatemyhamster"
+string4 = "functionalprogrammingrules" 
+string5 = "bananrepubliksinvasionsarmestabsadjutant" 
+string6 = "kontrabasfiolfodralmakarmästarlärling" 
 
 type AlignmentType = (String,String)
 
@@ -43,7 +51,10 @@ similarityScore string1 string2
 attachHeads :: a -> a -> [([a],[a])] -> [([a],[a])]
 attachHeads h1 h2 aList = [(h1:xs,h2:ys) | (xs,ys) <- aList]
 
---2b
+attachTails :: a -> a -> [([a],[a])] -> [([a],[a])]
+attachTails h1 h2 aList = [(xs ++ [h1],ys ++ [h2]) | (xs,ys) <- aList]
+
+--2c
 maximaBy :: Ord b => (a -> b) -> [a] -> [a]
 maximaBy valueFcn xs = do
     let maxValue = maximum [valueFcn x | x <- xs]
@@ -55,6 +66,38 @@ optAlignments [] (y:ys) = attachHeads '-' y (optAlignments [] ys)
 optAlignments (x:xs) [] = attachHeads x '-' (optAlignments xs [])
 optAlignments (x:xs) (y:ys) = maximaBy applySimilarityScore (attachHeads x y (optAlignments xs ys) ++ attachHeads '-' y (optAlignments (x:xs) ys) ++ attachHeads x '-' (optAlignments xs (y:ys)))
 
+optOptAlignments :: String -> String -> [AlignmentType]
+optOptAlignments string1 string2 = snd $ optAlign (length string1) (length string2)
+    where
+        optAlign i j = optTable!!i!!j
+        optTable = [[ optEntry i j | j<-[0..]] | i<-[0..] ]
+
+        rest :: Char -> Char -> (Int,[AlignmentType]) -> (Int,[AlignmentType])
+        rest char1 char2 (restScore,restAlignments) = (similarityScore [char1] [char2] + restScore, attachTails char1 char2 restAlignments)
+
+        optEntry :: Int -> Int -> (Int,[AlignmentType])
+        optEntry 0 0 = (0,[([],[])])
+        optEntry 0 j = rest '-' (string2!!(j-1)) $ optAlign 0 (j-1)
+        optEntry i 0 = rest (string1!!(i-1)) '-'  $ optAlign (i-1) 0
+        optEntry i j = (fst (head restsum),concatMap snd restsum)
+            where 
+                restsum = maximaBy fst [rest (string1!!(i-1)) (string2!!(j-1)) $ optAlign (i-1) (j-1),rest (string1!!(i-1)) '-' $ optAlign (i-1) j, rest '-' (string2!!(j-1)) $ optAlign i (j-1)]
+         
+
+
+outputOptAlignments :: String -> String -> IO ()
+outputOptAlignments string1 string2 = do
+    let optlist = optOptAlignments string1 string2
+        listLength = show (length optlist)
+    putStrLn ("There are " ++ listLength ++ " optimal alignments: \n\n" ++ concatMap tupleOutput optlist ++ "There were " ++ listLength ++ " optimal alignments\n")
+
+
+
+
+
 -- Help functions
-applySimilarityScore :: (String,String) -> Int
+applySimilarityScore :: AlignmentType -> Int
 applySimilarityScore (string1,string2) = similarityScore string1 string2
+
+tupleOutput :: AlignmentType -> String
+tupleOutput (stringx,stringy) = intersperse ' ' stringx ++ "\n" ++ intersperse ' ' stringy ++ "\n\n"
