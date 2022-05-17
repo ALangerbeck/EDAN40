@@ -16,6 +16,8 @@ iter m = m # iter m >-> cons ! return []
 
 cons(a, b) = a:b
 
+-- Must fix as right now we can't do this, forgot we cant use Nothing or Just
+{-
 (-#) :: Parser a -> Parser b -> Parser b
 (m -# n) cs = 
     case m cs of
@@ -33,7 +35,12 @@ cons(a, b) = a:b
         case n cs' of
         Nothing -> Nothing
         Just(b, cs'') -> Just(a, cs'')
+-}
+(#-) :: Parser a -> Parser b -> Parser a
+m #- n = m # n >-> fst 
 
+(-#) :: Parser a -> Parser b -> Parser b
+m -# n = m # n >-> snd 
 
 spaces :: Parser String
 spaces =  iter (char ? isSpace)

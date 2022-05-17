@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 module Expr(Expr, T, parse, fromString, value, toString) where
 
 {-
@@ -28,18 +29,20 @@ import Parser hiding (T)
 import qualified Dictionary
 
 data Expr = Num Integer | Var String | Add Expr Expr
-       | Sub Expr Expr | Mul Expr Expr | Div Expr Expr
+       | Sub Expr Expr | Mul Expr Expr | Div Expr Expr| Pow Expr Expr
          deriving Show
 
 type T = Expr
 
-var, num, factor, term, expr :: Parser Expr
+var, num, factor, term, expr, power :: Parser Expr
 
-term', expr' :: Expr -> Parser Expr
+term', expr',factor' :: Expr -> Parser Expr
 
 var = word >-> Var
 
 num = number >-> Num
+
+powOp = lit '^' >-> (\_ -> Pow)
 
 mulOp = lit '*' >-> (\_ -> Mul) !
         lit '/' >-> (\_ -> Div)
@@ -49,10 +52,13 @@ addOp = lit '+' >-> (\_ -> Add) !
 
 bldOp e (oper,e') = oper e e'
 
-factor = num !
+power = num !
          var !
          lit '(' -# expr #- lit ')' !
          err "illegal factor"
+
+factor' e = mulOp # factor >-> bldOp e #> factor' ! return e
+factor = power #> factor'
 
 term' e = mulOp # factor >-> bldOp e #> term' ! return e
 term = factor #> term'
@@ -69,6 +75,8 @@ shw prec (Add t u) = parens (prec>5) (shw 5 t ++ "+" ++ shw 5 u)
 shw prec (Sub t u) = parens (prec>5) (shw 5 t ++ "-" ++ shw 6 u)
 shw prec (Mul t u) = parens (prec>6) (shw 6 t ++ "*" ++ shw 6 u)
 shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
+-- prec is importance of calculatiom
+shw prec (Pow t u) = parens (prec>10) (shw 10 t ++ "^" ++ shw 10 u)
 
 value :: Expr -> Dictionary.T String Integer -> Integer
 value (Num a) dict = a
@@ -81,6 +89,7 @@ value (Mul expr1 expr2) dict = value expr1 dict * value expr2 dict
 value (Div expr1 expr2) dict = case value expr2 dict of
         0 -> error "You tried to divide by zero, fool\n"
         x -> div (value expr1 dict) (value expr2 dict)
+value (Pow expr1 expr2) dict = value expr1 dict ^ value expr2 dict
 
 
 instance Parse Expr where

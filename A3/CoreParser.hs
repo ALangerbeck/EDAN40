@@ -56,7 +56,7 @@ fail cs = Nothing
     Nothing -> Nothing
 
 (#>) :: Parser a -> (a -> Parser b) -> Parser b 
-(p #> k) cs = 
+(p #> k) cs =
     case p cs of
     Nothing -> Nothing
     Just(a, cs') -> k a cs'
