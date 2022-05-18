@@ -54,7 +54,7 @@ type T = Expr
 
 var, num, factor, term, expr, power :: Parser Expr
 
-term', expr',factor' :: Expr -> Parser Expr
+term', expr',power' :: Expr -> Parser Expr
 
 var = word >-> Var
 
@@ -73,17 +73,20 @@ addOp = lit '+' >-> (\_ -> Add) !
 
 bldOp :: t1 -> (t1 -> t2 -> t3, t2) -> t3
 bldOp e (oper,e') = oper e e'
+bldOp2 e (oper,e') = do 
+        let d = e'
+        oper e d
 
-power = num !
+factor = num !
          var !
          lit '(' -# expr #- lit ')' !
          err "illegal factor"
 
-factor' e = powOp # power >-> bldOp e #> factor' ! return e
-factor = power #> factor'
+power' e = powOp # power >-> bldOp e #> power' ! return e -- after discussion this should be the wat to make it right associative
+power = factor #> power'
 
-term' e = mulOp # factor >-> bldOp e #> term' ! return e
-term = factor #> term'
+term' e = mulOp # power >-> bldOp e #> term' ! return e
+term = power #> term'
 
 expr' e = addOp # term >-> bldOp e #> expr' ! return e
 expr = term #> expr'
@@ -99,7 +102,7 @@ shw prec (Sub t u) = parens (prec>5) (shw 5 t ++ "-" ++ shw 6 u)
 shw prec (Mul t u) = parens (prec>6) (shw 6 t ++ "*" ++ shw 6 u)
 shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
 -- prec is importance of calculation
-shw prec (Pow t u) = parens (prec>10) (shw 10 t ++ "^" ++ shw 10 u)
+shw prec (Pow t u) = parens (prec>10) (shw 10 t ++ "^" ++ shw 11 u)
 
 value :: Expr -> Dictionary.T String Integer -> Integer
 value (Num a) dict = a
@@ -112,7 +115,9 @@ value (Mul expr1 expr2) dict = value expr1 dict * value expr2 dict
 value (Div expr1 expr2) dict = case value expr2 dict of
         0 -> error "You tried to divide by zero, fool\n"
         x -> div (value expr1 dict) (value expr2 dict)
-value (Pow expr1 expr2) dict = value expr1 dict ^ value expr2 dict
+--value (Pow (Pow e1 e2) e3) dict = value (Pow e1 (Pow e2 e3)) dict -- Hacky way to make right associative but ended up not using
+value (Pow expr1 expr2) dict = (value expr1 dict ^) $ (value expr2 dict)
+
 
 
 instance Parse Expr where
