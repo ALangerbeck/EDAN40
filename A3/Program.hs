@@ -1,5 +1,11 @@
+
+{-
+  Handed in by:
+    Alfred Langerbeck al5878la-s@student.lu.se
+    Max Johansson, ma7580jo-s@student.lu.se
+-}
 module Program(T, parse, fromString, toString, exec) where
-import Parser hiding (T)
+import Parser ( Parse(..), (>->), iter )
 import qualified Statement
 import qualified Dictionary
 import Prelude hiding (return, fail)
@@ -10,11 +16,5 @@ instance Parse T where
   toString (Program prog) = concat [Statement.toString stm | stm <- prog]
 
 
-{-
-exec :: [Statement.T] -> [Integer]
-exec statements = Statement.exec statements (Dictionary.empty) []
--}
 exec :: T -> [Integer] -> [Integer]
 exec (Program prog) = Statement.exec prog Dictionary.empty
-
---exec = error "Program.exec not implemented"

@@ -1,3 +1,9 @@
+{-
+    Handed in by:
+        Alfred Langerbeck, al5878la-s@student.lu.se
+        Max Johansson, ma7580jo-s@student.lu.se
+-}
+
 module CoreParser(Parser, char, return, fail, (#), (!), (?), (#>), (>->),
                   Parse, parse, toString, fromString) where
 import Prelude hiding (return, fail)

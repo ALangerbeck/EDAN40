@@ -1,8 +1,13 @@
+{-
+    Handed in by:
+        Alfred Langerbeck, al5878la-s@student.lu.se
+        Max Johansson, ma7580jo-s@student.lu.se
+-}
 module Parser(module CoreParser, T, digit, digitVal, chars, letter, err,
               lit, number, iter, accept, require, token,
               spaces, word, (-#), (#-)) where
 import Prelude hiding (return, fail)
-import Data.Char
+import Data.Char ( digitToInt, isAlpha, isDigit, isSpace )
 import CoreParser
 infixl 7 -#, #- 
 
@@ -14,6 +19,7 @@ err message cs = error (message++" near "++cs++"\n")
 iter :: Parser a -> Parser [a]  
 iter m = m # iter m >-> cons ! return [] 
 
+cons :: (a, [a]) -> [a]
 cons(a, b) = a:b
 
 -- Must fix as right now we can't do this, forgot we cant use Nothing or Just

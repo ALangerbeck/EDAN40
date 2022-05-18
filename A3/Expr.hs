@@ -2,6 +2,11 @@
 module Expr(Expr, T, parse, fromString, value, toString) where
 
 {-
+        Handed in by:
+        Max Johansson, ma7580jo-s@student.lu.se
+        Alfred Langerbeck, al5878la-s@student.lu.se
+-}
+{-
    An expression of type Expr is a representation of an arithmetic expression 
    with integer constants and variables. A variable is a string of upper- 
    and lower case letters. The following functions are exported
@@ -25,7 +30,20 @@ module Expr(Expr, T, parse, fromString, value, toString) where
    Dictionary.T Int.  
 -}
 import Prelude hiding (return, fail)
-import Parser hiding (T)
+import Parser
+    ( Parser,
+      Parse(..),
+      return,
+      (!),
+      (#),
+      (>->),
+      (#>),
+      err,
+      (#-),
+      (-#),
+      word,
+      lit,
+      number )
 import qualified Dictionary
 
 data Expr = Num Integer | Var String | Add Expr Expr
@@ -42,14 +60,18 @@ var = word >-> Var
 
 num = number >-> Num
 
+powOp :: Parser (Expr -> Expr -> Expr)
 powOp = lit '^' >-> (\_ -> Pow)
 
+mulOp :: Parser (Expr -> Expr -> Expr)
 mulOp = lit '*' >-> (\_ -> Mul) !
         lit '/' >-> (\_ -> Div)
 
+addOp :: Parser (Expr -> Expr -> Expr)
 addOp = lit '+' >-> (\_ -> Add) !
         lit '-' >-> (\_ -> Sub)
 
+bldOp :: t1 -> (t1 -> t2 -> t3, t2) -> t3
 bldOp e (oper,e') = oper e e'
 
 power = num !
@@ -57,7 +79,7 @@ power = num !
          lit '(' -# expr #- lit ')' !
          err "illegal factor"
 
-factor' e = mulOp # factor >-> bldOp e #> factor' ! return e
+factor' e = powOp # power >-> bldOp e #> factor' ! return e
 factor = power #> factor'
 
 term' e = mulOp # factor >-> bldOp e #> term' ! return e
@@ -66,6 +88,7 @@ term = factor #> term'
 expr' e = addOp # term >-> bldOp e #> expr' ! return e
 expr = term #> expr'
 
+parens :: Bool -> [Char] -> [Char]
 parens cond str = if cond then "(" ++ str ++ ")" else str
 
 shw :: Int -> Expr -> String
@@ -75,7 +98,7 @@ shw prec (Add t u) = parens (prec>5) (shw 5 t ++ "+" ++ shw 5 u)
 shw prec (Sub t u) = parens (prec>5) (shw 5 t ++ "-" ++ shw 6 u)
 shw prec (Mul t u) = parens (prec>6) (shw 6 t ++ "*" ++ shw 6 u)
 shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
--- prec is importance of calculatiom
+-- prec is importance of calculation
 shw prec (Pow t u) = parens (prec>10) (shw 10 t ++ "^" ++ shw 10 u)
 
 value :: Expr -> Dictionary.T String Integer -> Integer

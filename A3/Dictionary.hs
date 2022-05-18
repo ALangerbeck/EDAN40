@@ -1,3 +1,8 @@
+{-
+    Handed in by:
+        Alfred Langerbeck al5878la-s@student.lu.se
+        Max Johansson, ma7580jo-s@student.lu.se
+-}
 module Dictionary (T, empty, lookup, insert) where
 import Prelude hiding (lookup)
 import qualified Prelude

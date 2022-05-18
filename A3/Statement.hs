@@ -1,5 +1,12 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 module Statement(T, parse, toString, fromString, exec) where
+
+{-
+    Handed in by:
+        Alfred Langerbeck al5878la-s@student.lu.se 
+        Max Johansson, ma7580jo-s@student.lu.se
+-}
+
 import Prelude hiding (return, fail)
 import Parser hiding (T)
 import qualified Dictionary
@@ -16,7 +23,7 @@ data Statement =
     While Expr.T Statement |
     Read String |
     Write Expr.T |
-    Comment
+    Comment String
     deriving Show
 
 assignment :: Parser Statement
@@ -45,7 +52,7 @@ write = accept "write" -# Expr.parse #- require ";" >-> Write
 
 comment :: Parser Statement
 comment = accept "--" # iter (char ? (/='\n')) # require "\n" >-> buildComment
-buildComment (_,_) = Comment
+buildComment (string,_) = Comment (concat string)
 
 exec :: [T] -> Dictionary.T String Integer -> [Integer] -> [Integer]
 exec (If cond thenStmts elseStmts: stmts) dict input =
@@ -67,7 +74,7 @@ exec (Write expression : stmts) dict input =
 exec (Read variable :stmts) dict (input:inputs) = do
     let ndict = Dictionary.insert (variable, input) dict
     exec stmts ndict inputs
-exec (Comment : stmts) dict input =
+exec (Comment str : stmts) dict input =
     exec stmts dict input
 exec [] _ _ = [] 
 
@@ -79,6 +86,7 @@ shw prec (If expression statement1 statement2) = indentString prec ++ "if " ++ t
 shw prec (While expression statement) = indentString prec ++ "while " ++ toString expression ++ " do\n" ++ shw (prec+1) statement
 shw prec (Read string) = indentString prec ++ "read " ++ string ++ ";\n"
 shw prec (Write expression) = indentString prec ++ "write " ++ toString expression ++ ";\n"
+shw prec (Comment str) = indentString prec ++ "-- " ++ str ++ "\n"
 
 
 
