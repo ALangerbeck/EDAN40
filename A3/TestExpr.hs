@@ -24,5 +24,5 @@ p2 = testValue "y^3^4"
 p3 = testValue "8^4"
 p4 = testValue "(y+3)*2^(x+y)"
 
-
+p5 = testValue "2^2^2^(1+1)" -- 65536
 

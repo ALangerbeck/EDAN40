@@ -73,9 +73,7 @@ addOp = lit '+' >-> (\_ -> Add) !
 
 bldOp :: t1 -> (t1 -> t2 -> t3, t2) -> t3
 bldOp e (oper,e') = oper e e'
-bldOp2 e (oper,e') = do 
-        let d = e'
-        oper e d
+
 
 factor = num !
          var !
