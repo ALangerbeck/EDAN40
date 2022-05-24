@@ -21,13 +21,9 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 -- Hlint options
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-import GHC.Base (maxInt, join, VecElem (Int16ElemRep))
 import Data.Text.Array (equal)
 import Data.List (intersperse)
-import Distribution.Simple.Setup (ConfigFlags(configConfigureArgs))
-import Control.Concurrent.STM (lengthTBQueue)
-import Distribution.Compat.CharParsing (CharParsing(string))
---import System.Win32 (COORD(x))
+
 
 {- Answers to Questions
 
